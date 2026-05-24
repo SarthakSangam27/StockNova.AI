@@ -238,6 +238,11 @@ def tickers_route():
 @app.route("/api/health")
 def health():
     return jsonify({"status":"ok","message":"StockNova.ai backend running"})
-
+@app.route("/")
+def home():
+    return {
+        "status":"ok",
+        "message":"StockNova.ai backend running"
+    }
 if __name__=="__main__":
     app.run(host="0.0.0.0",port=5050,debug=False,threaded=True)
