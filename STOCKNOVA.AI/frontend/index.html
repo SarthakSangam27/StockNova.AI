@@ -448,29 +448,9 @@ async function loadStock(ticker) {
   S.predResult = null;
   resetPredOutput();
   try {
-    const d = {
-  ticker: ticker,
-  count: 120,
-  data: Array.from({length:120}, (_,i)=>({
-    date:`2025-01-${String((i%30)+1).padStart(2,'0')}`,
-    open:180+i*0.3,
-    high:182+i*0.3,
-    low:178+i*0.3,
-    close:180+i*0.3 + Math.sin(i/5)*5,
-    volume:50000000 + Math.random()*10000000,
-    ema20:180+i*0.3,
-    ema50:178+i*0.3,
-    ema200:170+i*0.2,
-    rsi:40+Math.random()*30,
-    macd:Math.random()*2-1,
-    macd_signal:Math.random()*2-1,
-    macd_hist:Math.random()*2-1,
-    bb_upper:190+i*0.3,
-    bb_mid:180+i*0.3,
-    bb_lower:170+i*0.3,
-    atr:2+Math.random()
-  }))
-};
+    const res = await fetch(`${API}/api/stock/${ticker}`);
+    const d = await res.json();
+  
     S.stockData = d;
     renderMetrics(d);
     renderSignals(d);
