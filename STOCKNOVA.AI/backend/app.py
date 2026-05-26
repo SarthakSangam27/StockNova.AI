@@ -135,7 +135,7 @@ def lstm_predict(closes, horizon=7, epochs=25, model_type="lstm"):
     lr=0.005 if model_type!="ensemble" else 0.003
     X=[norm[i:i+seq_len] for i in range(len(norm)-seq_len-1)]
     y_=[norm[i+seq_len] for i in range(len(norm)-seq_len-1)]
-    sample=min(100,len(X))
+    sample=min(20,len(X))
     log=[]
     def forward(xi):
         h=[0.0]*H; c=[0.0]*H
@@ -209,7 +209,7 @@ def predict_route():
     model_type=body.get("model","lstm")
     rows=generate_data(ticker)
     closes=[r["close"] for r in rows]
-    epochs={"lstm":25,"transformer":20,"ensemble":30}.get(model_type,25)
+    epochs={"lstm":5,"transformer":5,"ensemble":5}.get(model_type,5)
     result=lstm_predict(closes,horizon,epochs,model_type)
     last=closes[-1]
     target=result["prices"][min(horizon-1,len(result["prices"])-1)]
