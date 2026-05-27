@@ -203,41 +203,63 @@ def stock_route(ticker):
 
 @app.route("/api/predict", methods=["POST"])
 def predict_route():
-    body=request.get_json() or {}
-    ticker=body.get("ticker","AAPL").upper()
-    horizon=int(body.get("horizon",7))
-    model_type=body.get("model","lstm")
-    rows=generate_data(ticker)
-    closes=[r["close"] for r in rows]
-    epochs={"lstm":25,"transformer":20,"ensemble":30}.get(model_type,25)
-    result=lstm_predict(closes,horizon,epochs,model_type)
-    last=closes[-1]
-    target=result["prices"][min(horizon-1,len(result["prices"])-1)]
-    result.update({
-        "current_price":last,"target_price":target,
-        "change_pct":round((target-last)/last*100,2),
-        "model":model_type,"ticker":ticker,"horizon":horizon,
-        "rmse":round(abs(random.gauss(1.8,0.4)),4),
-        "mae":round(abs(random.gauss(1.3,0.3)),4),
-        "r2":round(0.90+random.random()*0.08,4),
-        "mape":round(abs(random.gauss(0.8,0.2)),3),
-        "sharpe":round(1.2+random.random()*0.9,3),
-    })
-    return jsonify(result)
+    try:
+        body = request.get_json() or {}
 
-@app.route("/api/tickers")
-def tickers_route():
-    out=[]
-    for t,p in TICKER_PARAMS.items():
-        rows=generate_data(t)
-        last=rows[-1]["close"]; prev=rows[-2]["close"]
-        chg=round((last-prev)/prev*100,2)
-        out.append({"ticker":t,"name":p[4],"sector":p[5],"price":last,"change_pct":chg})
-    return jsonify(out)
+        ticker = body.get("ticker", "AAPL").upper()
+        horizon = int(body.get("horizon", 7))
+        model_type = body.get("model", "lstm")
 
-@app.route("/api/health")
-def health():
-    return jsonify({"status":"ok","message":"StockNova.ai backend running"})
+        rows = generate_data(ticker)
+
+        if not rows:
+            return jsonify({
+                "error": "No stock data available"
+            }), 400
+
+        closes = [r["close"] for r in rows]
+
+        epochs = {
+            "lstm": 25,
+            "transformer": 20,
+            "ensemble": 30
+        }.get(model_type, 25)
+
+        result = lstm_predict(
+            closes,
+            horizon,
+            epochs,
+            model_type
+        )
+
+        last = closes[-1]
+
+        target = result["prices"][
+            min(horizon - 1, len(result["prices"]) - 1)
+        ]
+
+        result.update({
+            "current_price": float(last),
+            "target_price": float(target),
+            "change_pct": round((target-last)/last*100, 2),
+            "model": model_type,
+            "ticker": ticker,
+            "horizon": horizon,
+            "rmse": round(abs(random.gauss(1.8,0.4)),4),
+            "mae": round(abs(random.gauss(1.3,0.3)),4),
+            "r2": round(0.90+random.random()*0.08,4),
+            "mape": round(abs(random.gauss(0.8,0.2)),3),
+            "sharpe": round(1.2+random.random()*0.9,3),
+        })
+
+        return jsonify(result)
+
+    except Exception as e:
+        print("PREDICTION ERROR:", str(e))
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0",port=5050,debug=False,threaded=True)
+    app.run(host="0.0.0.0",port=5050,debug=True,threaded=True)
